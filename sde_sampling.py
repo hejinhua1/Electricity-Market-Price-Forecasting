@@ -11,21 +11,20 @@ import torchvision.transforms as transforms
 from torchvision.datasets import MNIST
 from tqdm import tqdm
 from scipy import integrate
-
-
-
+from diffusion_sde import GaussianFourierProjection, Dense, ScoreNet, diffusion_coeff, marginal_prob_std
+import matplotlib.pyplot as plt
+from torchvision.utils import save_image, make_grid
+import os
 # @title Define the Euler-Maruyama sampler (double click to expand or collapse)
 
-## The number of sampling steps.
-num_steps = 500  # @param {'type':'integer'}
 
 
 def Euler_Maruyama_sampler(score_model,
                            marginal_prob_std,
                            diffusion_coeff,
                            batch_size=64,
-                           num_steps=num_steps,
-                           device='cuda',
+                           num_steps=500,
+                           device='cuda' if torch.cuda.is_available() else 'cpu',
                            eps=1e-3):
     """Generate samples from score-based models with the Euler-Maruyama solver.
 
@@ -61,19 +60,16 @@ def Euler_Maruyama_sampler(score_model,
 
 # @title Define the Predictor-Corrector sampler (double click to expand or collapse)
 
-signal_to_noise_ratio = 0.16  # @param {'type':'number'}
 
-## The number of sampling steps.
-num_steps = 500  # @param {'type':'integer'}
 
 
 def pc_sampler(score_model,
                marginal_prob_std,
                diffusion_coeff,
                batch_size=64,
-               num_steps=num_steps,
-               snr=signal_to_noise_ratio,
-               device='cuda',
+               num_steps=500,
+               snr=0.16,
+               device='cuda' if torch.cuda.is_available() else 'cpu',
                eps=1e-3):
     """Generate samples from score-based models with Predictor-Corrector method.
 
@@ -98,7 +94,7 @@ def pc_sampler(score_model,
     step_size = time_steps[0] - time_steps[1]
     x = init_x
     with torch.no_grad():
-        for time_step in tqdm.notebook.tqdm(time_steps):
+        for time_step in tqdm(time_steps):
             batch_time_step = torch.ones(batch_size, device=device) * time_step
             # Corrector step (Langevin MCMC)
             grad = score_model(x, batch_time_step)
@@ -120,16 +116,15 @@ def pc_sampler(score_model,
 
 
 ## The error tolerance for the black-box ODE solver
-error_tolerance = 1e-5  # @param {'type': 'number'}
 
 
 def ode_sampler(score_model,
                 marginal_prob_std,
                 diffusion_coeff,
                 batch_size=64,
-                atol=error_tolerance,
-                rtol=error_tolerance,
-                device='cuda',
+                atol=1e-5,
+                rtol=1e-5,
+                device='cuda' if torch.cuda.is_available() else 'cpu',
                 z=None,
                 eps=1e-3):
     """Generate samples from score-based models with black-box ODE solvers.
@@ -180,153 +175,57 @@ def ode_sampler(score_model,
     return x
 
 
-# @title Sampling (double click to expand or collapse)
-
-from torchvision.utils import make_grid
-
-## Load the pre-trained checkpoint from disk.
-device = 'cuda'  # @param ['cuda', 'cpu'] {'type':'string'}
-ckpt = torch.load('ckpt.pth', map_location=device)
-score_model.load_state_dict(ckpt)
-
-sample_batch_size = 64  # @param {'type':'integer'}
-sampler = ode_sampler  # @param ['Euler_Maruyama_sampler', 'pc_sampler', 'ode_sampler'] {'type': 'raw'}
-
-## Generate samples using the specified sampler.
-samples = sampler(score_model,
-                  marginal_prob_std_fn,
-                  diffusion_coeff_fn,
-                  sample_batch_size,
-                  device=device)
-
-## Sample visualization.
-samples = samples.clamp(0.0, 1.0)
-
-import matplotlib.pyplot as plt
-
-sample_grid = make_grid(samples, nrow=int(np.sqrt(sample_batch_size)))
-
-plt.figure(figsize=(6, 6))
-plt.axis('off')
-plt.imshow(sample_grid.permute(1, 2, 0).cpu(), vmin=0., vmax=1.)
-plt.show()
 
 
-# @title Define the likelihood function (double click to expand or collapse)
-
-def prior_likelihood(z, sigma):
-    """The likelihood of a Gaussian distribution with mean zero and
-        standard deviation sigma."""
-    shape = z.shape
-    N = np.prod(shape[1:])
-    return -N / 2. * torch.log(2 * np.pi * sigma ** 2) - torch.sum(z ** 2, dim=(1, 2, 3)) / (2 * sigma ** 2)
 
 
-def ode_likelihood(x,
-                   score_model,
-                   marginal_prob_std,
-                   diffusion_coeff,
-                   batch_size=64,
-                   device='cuda',
-                   eps=1e-5):
-    """Compute the likelihood with probability flow ODE.
-
-    Args:
-      x: Input data.
-      score_model: A PyTorch model representing the score-based model.
-      marginal_prob_std: A function that gives the standard deviation of the
-        perturbation kernel.
-      diffusion_coeff: A function that gives the diffusion coefficient of the
-        forward SDE.
-      batch_size: The batch size. Equals to the leading dimension of `x`.
-      device: 'cuda' for evaluation on GPUs, and 'cpu' for evaluation on CPUs.
-      eps: A `float` number. The smallest time step for numerical stability.
-
-    Returns:
-      z: The latent code for `x`.
-      bpd: The log-likelihoods in bits/dim.
-    """
-
-    # Draw the random Gaussian sample for Skilling-Hutchinson's estimator.
-    epsilon = torch.randn_like(x)
-
-    def divergence_eval(sample, time_steps, epsilon):
-        """Compute the divergence of the score-based model with Skilling-Hutchinson."""
-        with torch.enable_grad():
-            sample.requires_grad_(True)
-            score_e = torch.sum(score_model(sample, time_steps) * epsilon)
-            grad_score_e = torch.autograd.grad(score_e, sample)[0]
-        return torch.sum(grad_score_e * epsilon, dim=(1, 2, 3))
-
-    shape = x.shape
-
-    def score_eval_wrapper(sample, time_steps):
-        """A wrapper for evaluating the score-based model for the black-box ODE solver."""
-        sample = torch.tensor(sample, device=device, dtype=torch.float32).reshape(shape)
-        time_steps = torch.tensor(time_steps, device=device, dtype=torch.float32).reshape((sample.shape[0],))
-        with torch.no_grad():
-            score = score_model(sample, time_steps)
-        return score.cpu().numpy().reshape((-1,)).astype(np.float64)
-
-    def divergence_eval_wrapper(sample, time_steps):
-        """A wrapper for evaluating the divergence of score for the black-box ODE solver."""
-        with torch.no_grad():
-            # Obtain x(t) by solving the probability flow ODE.
-            sample = torch.tensor(sample, device=device, dtype=torch.float32).reshape(shape)
-            time_steps = torch.tensor(time_steps, device=device, dtype=torch.float32).reshape((sample.shape[0],))
-            # Compute likelihood.
-            div = divergence_eval(sample, time_steps, epsilon)
-            return div.cpu().numpy().reshape((-1,)).astype(np.float64)
-
-    def ode_func(t, x):
-        """The ODE function for the black-box solver."""
-        time_steps = np.ones((shape[0],)) * t
-        sample = x[:-shape[0]]
-        logp = x[-shape[0]:]
-        g = diffusion_coeff(torch.tensor(t)).cpu().numpy()
-        sample_grad = -0.5 * g ** 2 * score_eval_wrapper(sample, time_steps)
-        logp_grad = -0.5 * g ** 2 * divergence_eval_wrapper(sample, time_steps)
-        return np.concatenate([sample_grad, logp_grad], axis=0)
-
-    init = np.concatenate([x.cpu().numpy().reshape((-1,)), np.zeros((shape[0],))], axis=0)
-    # Black-box ODE solver
-    res = integrate.solve_ivp(ode_func, (eps, 1.), init, rtol=1e-5, atol=1e-5, method='RK45')
-    zp = torch.tensor(res.y[:, -1], device=device)
-    z = zp[:-shape[0]].reshape(shape)
-    delta_logp = zp[-shape[0]:].reshape(shape[0])
-    sigma_max = marginal_prob_std(1.)
-    prior_logp = prior_likelihood(z, sigma_max)
-    bpd = -(prior_logp + delta_logp) / np.log(2)
-    N = np.prod(shape[1:])
-    bpd = bpd / N + 8.
-    return z, bpd
 
 
-# @title Compute likelihood on the dataset (double click to expand or collapse)
 
-batch_size = 32  # @param {'type':'integer'}
 
-dataset = MNIST('.', train=False, transform=transforms.ToTensor(), download=True)
-data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
-ckpt = torch.load('ckpt.pth', map_location=device)
-score_model.load_state_dict(ckpt)
 
-all_bpds = 0.
-all_items = 0
-try:
-    tqdm_data = tqdm.notebook.tqdm(data_loader)
-    for x, _ in tqdm_data:
-        x = x.to(device)
-        # uniform dequantization
-        x = (x * 255. + torch.rand_like(x)) / 256.
-        _, bpd = ode_likelihood(x, score_model, marginal_prob_std_fn,
-                                diffusion_coeff_fn,
-                                x.shape[0], device=device, eps=1e-5)
-        all_bpds += bpd.sum()
-        all_items += bpd.shape[0]
-        tqdm_data.set_description("Average bits/dim: {:5f}".format(all_bpds / all_items))
+if __name__ == '__main__':
+    # @title Sampling (double click to expand or collapse)
+    ## Load the pre-trained checkpoint from disk.
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    sigma = 25.0  # @param {'type':'number'}
+    marginal_prob_std_fn = functools.partial(marginal_prob_std, sigma=sigma, device=device)
+    diffusion_coeff_fn = functools.partial(diffusion_coeff, sigma=sigma, device=device)
+    score_model = ScoreNet(marginal_prob_std=marginal_prob_std_fn)
+    score_model = score_model.to(device)
+    models_file_path = 'checkpoints'  # 保存图片的目录
+    models_path = os.path.join(models_file_path, 'sde_49.pth')
+    ckpt = torch.load(models_path, map_location=device)
+    score_model.load_state_dict(ckpt)
 
-except KeyboardInterrupt:
-    # Remove the error message when interuptted by keyboard or GUI.
-    pass
+    sample_batch_size = 64  # @param {'type':'integer'}
+    sampler = pc_sampler  # @param ['Euler_Maruyama_sampler', 'pc_sampler', 'ode_sampler'] {'type': 'raw'}
+
+    ## Generate samples using the specified sampler.
+    samples = sampler(score_model,
+                      marginal_prob_std_fn,
+                      diffusion_coeff_fn,
+                      sample_batch_size,
+                      device=device)
+
+    ## Sample visualization.
+    samples = samples.clamp(0.0, 1.0)
+
+    # Sample grid preparation
+    sample_grid = make_grid(samples, nrow=int(np.sqrt(sample_batch_size)))
+
+    # Save the sample image
+    sampler_name = sampler.__name__  # 获取采样器的名称
+    results_path = 'results'  # 保存图片的目录
+    os.makedirs(results_path, exist_ok=True)  # 创建目录（如果不存在）
+
+    # 生成保存的文件名
+    file_path = os.path.join(results_path, f'{sampler_name}_samples.png')
+
+    # Save the image
+    plt.figure(figsize=(6, 6))
+    plt.axis('off')
+    plt.imshow(sample_grid.permute(1, 2, 0).cpu(), vmin=0., vmax=1.)
+    plt.savefig(file_path, bbox_inches='tight', pad_inches=0)
+    plt.close()

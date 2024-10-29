@@ -12,7 +12,7 @@ import torchvision.transforms as transforms
 from torchvision.datasets import MNIST
 from tqdm import tqdm
 from scipy import integrate
-
+import os
 
 
 
@@ -137,7 +137,7 @@ class ScoreNet(nn.Module):
 
 
 
-def marginal_prob_std(t, sigma):
+def marginal_prob_std(t, sigma, device):
     """Compute the mean and standard deviation of $p_{0t}(x(t) | x(0))$.
 
     Args:
@@ -151,7 +151,7 @@ def marginal_prob_std(t, sigma):
     return torch.sqrt((sigma ** (2 * t) - 1.) / 2. / np.log(sigma))
 
 
-def diffusion_coeff(t, sigma):
+def diffusion_coeff(t, sigma, device):
     """Compute the diffusion coefficient of our SDE.
 
     Args:
@@ -188,40 +188,48 @@ def loss_fn(model, x, marginal_prob_std, eps=1e-5):
   return loss
 
 
+if __name__ == '__main__':
+    # Set random seed for reproducibility
+    torch.manual_seed(42)
+    #@title Training (double click to expand or collapse)
 
-#@title Training (double click to expand or collapse)
+    # 如果cuda不可用，将device设置为cpu
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    sigma = 25.0  # @param {'type':'number'}
+    marginal_prob_std_fn = functools.partial(marginal_prob_std, sigma=sigma, device=device)
+    diffusion_coeff_fn = functools.partial(diffusion_coeff, sigma=sigma, device=device)
+    score_model = ScoreNet(marginal_prob_std=marginal_prob_std_fn)
+    score_model = score_model.to(device)
 
-device = 'cuda'  # @param ['cuda', 'cpu'] {'type':'string'}
-sigma = 25.0  # @param {'type':'number'}
-marginal_prob_std_fn = functools.partial(marginal_prob_std, sigma=sigma)
-diffusion_coeff_fn = functools.partial(diffusion_coeff, sigma=sigma)
-score_model = torch.nn.DataParallel(ScoreNet(marginal_prob_std=marginal_prob_std_fn))
-score_model = score_model.to(device)
+    n_epochs = 50#@param {'type':'integer'}
+    ## size of a mini-batch
+    batch_size = 64 #@param {'type':'integer'}
+    ## learning rate
+    lr = 1e-4 #@param {'type':'number'}
 
-n_epochs =   50#@param {'type':'integer'}
-## size of a mini-batch
-batch_size =  32 #@param {'type':'integer'}
-## learning rate
-lr=1e-4 #@param {'type':'number'}
+    dataset = MNIST('.', train=True, transform=transforms.ToTensor(), download=True)
+    data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 
-dataset = MNIST('.', train=True, transform=transforms.ToTensor(), download=True)
-data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4)
+    optimizer = Adam(score_model.parameters(), lr=lr)
+    tqdm_epoch = tqdm(range(n_epochs))
+    # 保存模型的路径
+    models_file_path = 'checkpoints'  # 保存图片的目录
+    os.makedirs(models_file_path, exist_ok=True)  # 创建目录（如果不存在）
 
-optimizer = Adam(score_model.parameters(), lr=lr)
-tqdm_epoch = tqdm.trange(n_epochs)
-for epoch in tqdm_epoch:
-  avg_loss = 0.
-  num_items = 0
-  for x, y in data_loader:
-    x = x.to(device)
-    loss = loss_fn(score_model, x, marginal_prob_std_fn)
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
-    avg_loss += loss.item() * x.shape[0]
-    num_items += x.shape[0]
-  # Print the averaged training loss so far.
-  tqdm_epoch.set_description('Average Loss: {:5f}'.format(avg_loss / num_items))
-  # Update the checkpoint after each epoch of training.
-  torch.save(score_model.state_dict(), 'ckpt.pth')
+    for epoch in tqdm_epoch:
+        avg_loss = 0.
+        num_items = 0
+        for x, y in data_loader:
+            x = x.to(device)
+            loss = loss_fn(score_model, x, marginal_prob_std_fn)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            avg_loss += loss.item() * x.shape[0]
+            num_items += x.shape[0]
+        # Print the averaged training loss so far.
+        tqdm_epoch.set_description('Average Loss: {:5f}'.format(avg_loss / num_items))
+        # Update the checkpoint after each epoch of training.
+        models_path = os.path.join(models_file_path, f'sde_{epoch}.pth')
+        torch.save(score_model.state_dict(), models_path)
 
