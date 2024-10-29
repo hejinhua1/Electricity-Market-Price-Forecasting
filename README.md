@@ -26,6 +26,8 @@ python sde_sampling.py
 ```
 ## Data
 The dataset used in this project is the real-world electricity market price data from GanShu Province, China. The dataset contains 15-min electricity prices in 2024.
+The label column is the electricity price, namely 'dayahead_clearing_price', and the columns 'wind_power_forecast', 'photovoltaic_power_forecast' and 'realtime_clearing_price' 
+are not used.
 ## Model Architecture
 TODO: Add model architecture diagram
 ## Results
