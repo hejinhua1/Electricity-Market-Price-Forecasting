@@ -115,35 +115,51 @@ if __name__ == '__main__':
     # data_val.reset_index(drop=True).to_feather('../data/val_data.feather')
     # data_test.reset_index(drop=True).to_feather('../data/test_data.feather')
 
-    # # 读取数据
-    # data_full = pd.read_feather('../data/full_data.feather')
-    #
+    # 读取数据
+    data_full = pd.read_feather('../data/full_data.feather')
+
     # 选择需要归一化的列
-    columns_to_normalize = ['time_order', 'provincial_load_forecast', 'tie_line_load_forecast',
+    columns_to_normalize_X = ['time_order', 'provincial_load_forecast', 'tie_line_load_forecast',
                             'total_power_forecast', 'new_energy_power_forecast',
-                            'hydraulic_power_forecast', 'non_market_power_forecast',
-                            'dayahead_clearing_price']
-    # # 创建缩放器
-    # scaler = StandardScaler()
-    #
-    # # 应用标准化
-    # data_full[columns_to_normalize] = scaler.fit_transform(data_full[columns_to_normalize])
-    #
-    # # 保存 scaler
-    # joblib.dump(scaler, '../data/scaler.joblib')
+                            'hydraulic_power_forecast', 'non_market_power_forecast']
+    columns_to_normalize_Y = ['dayahead_clearing_price']
+    # 创建缩放器
+    scalerX = StandardScaler()
+    scalerY = StandardScaler()
+
+    # 应用标准化
+    data_full[columns_to_normalize_X] = scalerX.fit_transform(data_full[columns_to_normalize_X])
+    data_full[columns_to_normalize_Y] = scalerY.fit_transform(data_full[columns_to_normalize_Y])
+    # 保存 scaler
+    joblib.dump(scalerX, '../data/scalerX.joblib')
+    joblib.dump(scalerY, '../data/scalerY.joblib')
+
+
     # # 加载 scaler
-    scaler = joblib.load('../data/scaler.joblib')
+    scalerX = joblib.load('../data/scalerX.joblib')
+    scalerY = joblib.load('../data/scalerY.joblib')
     data_train = pd.read_feather('../data/train_data.feather')
     data_val = pd.read_feather('../data/val_data.feather')
     data_test = pd.read_feather('../data/test_data.feather')
+
     # 对上面的数据集进行归一化
-    data_train[columns_to_normalize] = scaler.transform(data_train[columns_to_normalize])
-    data_val[columns_to_normalize] = scaler.transform(data_val[columns_to_normalize])
-    data_test[columns_to_normalize] = scaler.transform(data_test[columns_to_normalize])
+    data_train[columns_to_normalize_X] = scalerX.transform(data_train[columns_to_normalize_X])
+    data_val[columns_to_normalize_X] = scalerX.transform(data_val[columns_to_normalize_X])
+    data_test[columns_to_normalize_X] = scalerX.transform(data_test[columns_to_normalize_X])
+
+    data_train[columns_to_normalize_Y] = scalerY.transform(data_train[columns_to_normalize_Y])
+    data_val[columns_to_normalize_Y] = scalerY.transform(data_val[columns_to_normalize_Y])
+    data_test[columns_to_normalize_Y] = scalerY.transform(data_test[columns_to_normalize_Y])
+
     # 对数据进行反归一化
-    data_train[columns_to_normalize] = scaler.inverse_transform(data_train[columns_to_normalize])
-    data_val[columns_to_normalize] = scaler.inverse_transform(data_val[columns_to_normalize])
-    data_test[columns_to_normalize] = scaler.inverse_transform(data_test[columns_to_normalize])
+    data_train[columns_to_normalize_X] = scalerX.inverse_transform(data_train[columns_to_normalize_X])
+    data_val[columns_to_normalize_X] = scalerX.inverse_transform(data_val[columns_to_normalize_X])
+    data_test[columns_to_normalize_X] = scalerX.inverse_transform(data_test[columns_to_normalize_X])
+
+    data_train[columns_to_normalize_Y] = scalerY.inverse_transform(data_train[columns_to_normalize_Y])
+    data_val[columns_to_normalize_Y] = scalerY.inverse_transform(data_val[columns_to_normalize_Y])
+    data_test[columns_to_normalize_Y] = scalerY.inverse_transform(data_test[columns_to_normalize_Y])
+
 
 
 
