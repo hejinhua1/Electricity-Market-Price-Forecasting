@@ -16,7 +16,7 @@ data_dict = {
     'SMD': SMDSegLoader,
     'SWAT': SWATSegLoader,
     'UEA': UEAloader,
-    'ElcPrice_script': Dataset_ElcPrice
+    'ElcPrice': Dataset_ElcPrice
 }
 
 
