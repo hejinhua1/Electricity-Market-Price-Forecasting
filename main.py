@@ -17,11 +17,11 @@ class Config:
         self.task_name = 'long_term_forecast' # 'imputation', 'short_term_forecast', 'long_term_forecast', 'anomaly_detection', 'classification'
         self.is_training = 1
         self.model_id = 'ElcPrice_96_96'
-        self.model = 'TimesNet'
+        self.model = 'Nonstationary_Transformer'   # 'Autoformer', 'Informer', 'Nonstationary_Transformer', 'TimesNet', 'TimeXer'
         self.des = 'Exp'
 
         # 数据加载
-        self.data = 'ElcPrice'
+        self.data = 'ElcPrice_script'
         self.root_path = './data/'
         self.data_path = 'full_data.feather'
         self.features = 'MS'
@@ -33,8 +33,8 @@ class Config:
         self.seq_len = 96
         self.label_len = 48
         self.pred_len = 96
-        self.seasonal_patterns = 'dayly'
-        self.inverse = True
+        self.seasonal_patterns = 'daily'
+        self.inverse = False
 
         # 填充任务
         self.mask_rate = 0.25
@@ -98,7 +98,7 @@ class Config:
         self.augmentation_ratio = 0
         self.seed = 2
         self.jitter = False
-        self.scaling = True
+        self.scaling = False
         self.permutation = False
         self.randompermutation = False
         self.magwarp = False
