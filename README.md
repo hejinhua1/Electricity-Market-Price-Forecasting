@@ -23,11 +23,7 @@ We have provided scripts for training and evaluating the models for selected. As
 - Autoformer
 - Nonstationary_Transformer
 
-To train the model respectively, run the following command:
-```bash
-python diffusion_sde.py
-```
-To evaluate the model, run the following command:
+To train the above models respectively, run the following command:
 ```bash
 bash ./scripts/long_term_forecast/ElcPrice_script/TimesNet_ElcPrice.sh
 bash ./scripts/long_term_forecast/ElcPrice_script/TimeXer_ElcPrice.sh
@@ -35,6 +31,8 @@ bash ./scripts/long_term_forecast/ElcPrice_script/Informer_ElcPrice.sh
 bash ./scripts/long_term_forecast/ElcPrice_script/Autoformer_ElcPrice.sh
 bash ./scripts/long_term_forecast/ElcPrice_script/Nonstationary_Transformer_ElcPrice.sh
 ```
+After training, you can get the evaluation results in the 'test_results' folder. And the trained models are saved in the 'checkpoints' folder.
+
 ## Data
 The dataset used in this project is the real-world electricity market price data from GanShu Province, China. The dataset contains 15-min electricity prices in 2024.
 The label column is the electricity price, namely 'dayahead_clearing_price', and the columns 'wind_power_forecast', 'photovoltaic_power_forecast' and 'realtime_clearing_price' 
