@@ -32,6 +32,7 @@ bash ./scripts/long_term_forecast/ElcPrice_script/Autoformer_ElcPrice.sh
 bash ./scripts/long_term_forecast/ElcPrice_script/Nonstationary_Transformer_ElcPrice.sh
 ```
 After training, you can get the evaluation results in the 'test_results' and 'results' folder. And the trained models are saved in the 'checkpoints' folder.
+Howerver, the TimesNet model does have a bug now, you can try not to use GPU when training the model.
 
 ## Data
 The dataset used in this project is the real-world electricity market price data from GanShu Province, China. The dataset contains 15-min electricity prices in 2024.
