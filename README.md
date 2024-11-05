@@ -54,5 +54,6 @@ For the model parameters, you should modify the following parameters in the conf
 ## Model Architecture
 TODO: Add model architecture diagram
 ## Results
-TODO: Add results and visualizations
-```
+The visualization of the results is shown in the 'test results' folder. [Here](test_results/long_term_forecast_ETTh1_96_96_TimesNet_ETTh1_ftM_sl96_ll48_pl96_dm16_nh8_el2_dl1_df32_expand2_dc4_fc3_ebtimeF_dtTrue_test_0/0.pdf), we have provided the results of the TimesNet model.
+
+
