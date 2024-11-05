@@ -17,7 +17,7 @@ class Config:
         self.task_name = 'long_term_forecast' # 'imputation', 'short_term_forecast', 'long_term_forecast', 'anomaly_detection', 'classification'
         self.is_training = 1
         self.model_id = 'ElcPrice_96_96'
-        self.model = 'Informer'   # 'Autoformer', 'Informer', 'Nonstationary_Transformer', 'TimesNet', 'TimeXer'
+        self.model = 'TimesNet'   # 'Autoformer', 'Informer', 'Nonstationary_Transformer', 'TimesNet', 'TimeXer'
         self.des = 'Exp'
 
         # 数据加载
@@ -72,7 +72,7 @@ class Config:
         # 优化
         self.num_workers = 10
         self.itr = 1
-        self.train_epochs = 10
+        self.train_epochs = 1
         self.batch_size = 32
         self.patience = 3
         self.learning_rate = 0.0001

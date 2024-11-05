@@ -202,8 +202,11 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                 batch_y = batch_y.detach().cpu().numpy()
                 if test_data.scale and self.args.inverse:
                     shape = outputs.shape
-                    outputs = test_data.inverse_transform(outputs.reshape(shape[0] * shape[1], -1)).reshape(shape)
-                    batch_y = test_data.inverse_transform(batch_y.reshape(shape[0] * shape[1], -1)).reshape(shape)
+                    # for MS, some model output may have multiple dimensions, we need to repeat the outputs to match the target
+                    if shape[2] == 1 and batch_y.shape[2] > 1:
+                        outputs = np.repeat(outputs, batch_y.shape[2], axis=2)
+                    outputs = test_data.inverse_transform(outputs.reshape(shape[0] * shape[1], -1)).reshape(batch_y.shape)
+                    batch_y = test_data.inverse_transform(batch_y.reshape(shape[0] * shape[1], -1)).reshape(batch_y.shape)
         
                 outputs = outputs[:, :, f_dim:]
                 batch_y = batch_y[:, :, f_dim:]
