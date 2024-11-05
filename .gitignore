@@ -6,7 +6,6 @@ __pycache__/
 *$py.class
 
 # launch bash
-*.sh
 # nsight system report files
 *.nsys-rep
 *.sqlite
