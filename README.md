@@ -15,6 +15,12 @@ git clone https://github.com/hejinhua1/Electricity-Market-Price-Forecasting.git
 cd Electricity-Market-Price-Forecasting
 pip install -r requirements.txt
 ```
+
+Please note that the project is built using PyTorch, and the required CUDA version is 12.4. You can install it using the following command:
+```bash
+conda install pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia
+```
+
 ## Usage
 We have provided scripts for training and evaluating the models for selected. As for now, we have implemented the following models:
 - TimesNet
@@ -32,7 +38,6 @@ bash ./scripts/long_term_forecast/ElcPrice_script/Autoformer_ElcPrice.sh
 bash ./scripts/long_term_forecast/ElcPrice_script/Nonstationary_Transformer_ElcPrice.sh
 ```
 After training, you can get the evaluation results in the 'test_results' and 'results' folder. And the trained models are saved in the 'checkpoints' folder.
-Howerver, the TimesNet model does have a bug now, you can try not to use GPU when training the model.
 
 ## Data
 The dataset used in this project is the real-world electricity market price data from GanShu Province, China. The dataset contains 15-min electricity prices in 2024.
