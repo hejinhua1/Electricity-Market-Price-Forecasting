@@ -60,5 +60,11 @@ For the model parameters, you should modify the following parameters in the conf
 TODO: Add model architecture diagram
 ## Results
 The visualization of the results is shown in the 'test results' folder. [Here](test_results/long_term_forecast_ETTh1_96_96_TimesNet_ETTh1_ftM_sl96_ll48_pl96_dm16_nh8_el2_dl1_df32_expand2_dc4_fc3_ebtimeF_dtTrue_test_0/0.pdf), we have provided the results of the TimesNet model.
+For now, the best model is the Informer model, which achieves the lowest RMSE and MAE. The results of the TimesNet model are shown below:
+'''
+long_term_forecast_ElcPrice_96_96_Informer_ElcPrice_ftMS_sl96_ll48_pl96_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebtimeF_dtTrue_Exp_8_0  
+mse:19981.259765625, mae:112.72074127197266, dtw:not calculated
+'''
+
 
 
