@@ -87,3 +87,29 @@ class mase_loss(nn.Module):
         masep = t.mean(t.abs(insample[:, freq:] - insample[:, :-freq]), dim=1)
         masked_masep_inv = divide_no_nan(mask, masep[:, None])
         return t.mean(t.abs(target - forecast) * masked_masep_inv)
+
+
+
+class WeightedMSELoss(nn.Module):
+    def __init__(self, threshold=1.0, high_weight=2.0):
+        super(WeightedMSELoss, self).__init__()
+        self.threshold = threshold
+        self.high_weight = high_weight
+
+    def forward(self, predictions, targets):
+        """
+        WeightedMSELoss
+
+        :param threshold: threshold value
+        :param high_weight: weight for high values
+        :param forecast: Forecast values. Shape: batch, time
+        :param target: Target values. Shape: batch, time
+        :return: Loss value
+        """
+        mse = (predictions - targets) ** 2
+        # 找出真实值超过阈值的区域
+        weights = t.where(targets > self.threshold, self.high_weight, 1.0)
+        # 加权MSE
+        weighted_mse = weights * mse
+        return weighted_mse.mean()
+

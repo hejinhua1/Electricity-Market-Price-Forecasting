@@ -1,6 +1,7 @@
 from data_provider.data_factory import data_provider
 from exp.exp_basic import Exp_Basic
 from utils.tools import EarlyStopping, adjust_learning_rate, visual
+from utils.losses import mape_loss, mase_loss, smape_loss, WeightedMSELoss
 from utils.metrics import metric
 import torch
 import torch.nn as nn
@@ -34,9 +35,17 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         model_optim = optim.Adam(self.model.parameters(), lr=self.args.learning_rate)
         return model_optim
 
-    def _select_criterion(self):
-        criterion = nn.MSELoss()
-        return criterion
+    def _select_criterion(self, loss_name='WMSE'):
+        if loss_name == 'MSE':
+            return nn.MSELoss()
+        elif loss_name == 'MAPE':
+            return mape_loss()
+        elif loss_name == 'MASE':
+            return mase_loss()
+        elif loss_name == 'SMAPE':
+            return smape_loss()
+        elif loss_name == 'WMSE':
+            return WeightedMSELoss()
 
     def vali(self, vali_data, vali_loader, criterion):
         total_loss = []
@@ -257,10 +266,10 @@ class Exp_Long_Term_Forecast(Exp_Basic):
             
 
         mae, mse, rmse, mape, mspe = metric(preds, trues)
-        print('mse:{}, mae:{}, dtw:{}'.format(mse, mae, dtw))
+        print('mse:{:.4f}, mae:{:.4f}, rmse:{:.4f}, mape:{:.4f}, mspe:{:.4f}, dtw:{}'.format(mse, mae, rmse, mape, mspe, dtw))
         f = open("result_long_term_forecast.txt", 'a')
         f.write(setting + "  \n")
-        f.write('mse:{}, mae:{}, dtw:{}'.format(mse, mae, dtw))
+        f.write('mse:{:.4f}, mae:{:.4f}, rmse:{:.4f}, mape:{:.4f}, mspe:{:.4f}, dtw:{}'.format(mse, mae, rmse, mape, mspe, dtw))
         f.write('\n')
         f.write('\n')
         f.close()

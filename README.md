@@ -59,12 +59,12 @@ For the model parameters, you should modify the following parameters in the conf
 ## Model Architecture
 TODO: Add model architecture diagram
 ## Results
-The visualization of the results is shown in the 'test results' folder. [Here](test_results/long_term_forecast_ElcPrice_96_96_Informer_ElcPrice_ftMS_sl96_ll48_pl96_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebtimeF_dtTrue_Exp_8_0/0.pdf), we have provided the results of the TimesNet model.
+The visualization of the results is shown in the 'test results' folder. [Here](test_results/long_term_forecast_ElcPrice_96_96_Informer_ElcPrice_ftMS_sl96_ll48_pl96_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebtimeF_dtTrue_Exp_16_0/0.pdf), we have provided the results of the TimesNet model.
 For now, the best model is the Informer model, which achieves the lowest RMSE and MAE. The results of the TimesNet model are shown below:
 
 ```bash
-long_term_forecast_ElcPrice_96_96_Informer_ElcPrice_ftMS_sl96_ll48_pl96_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebtimeF_dtTrue_Exp_8_0  
-mse:19981.259765625, mae:112.72074127197266, dtw:not calculated
+long_term_forecast_ElcPrice_96_96_Informer_ElcPrice_ftMS_sl96_ll48_pl96_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebtimeF_dtTrue_Exp_16_0  
+mse:20175.2734, mae:110.7404, rmse:142.0397, mape:0.7177, mspe:1.4207, dtw:not calculated
 ```
 
 

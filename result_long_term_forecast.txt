@@ -268,3 +268,27 @@ mse:23379.615234375, mae:126.74193572998047, dtw:not calculated
 long_term_forecast_ElcPrice_96_96_TimesNet_ElcPrice_ftMS_sl96_ll48_pl96_dm16_nh8_el2_dl1_df32_expand2_dc4_fc3_ebtimeF_dtTrue_Exp_4096_0  
 mse:43152.88671875, mae:170.025390625, dtw:not calculated
 
+long_term_forecast_ElcPrice_96_96_Informer_ElcPrice_ftMS_sl96_ll48_pl96_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebtimeF_dtTrue_Exp_4_0  
+mse:20929.3340, mae:114.6096, rmse:144.6697, mape:0.7504, mspe:1.3959, dtw:not calculated
+
+long_term_forecast_ElcPrice_96_96_Informer_ElcPrice_ftMS_sl96_ll48_pl96_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebtimeF_dtTrue_Exp_8_0  
+mse:20152.8848, mae:112.5001, rmse:141.9609, mape:0.7791, mspe:1.6683, dtw:not calculated
+
+long_term_forecast_ElcPrice_96_96_Informer_ElcPrice_ftMS_sl96_ll48_pl96_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebtimeF_dtTrue_Exp_16_0  
+mse:20175.2734, mae:110.7404, rmse:142.0397, mape:0.7177, mspe:1.4207, dtw:not calculated
+
+long_term_forecast_ElcPrice_96_96_Informer_ElcPrice_ftMS_sl96_ll48_pl96_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebtimeF_dtTrue_Exp_32_0  
+mse:23612.0000, mae:120.5186, rmse:153.6620, mape:0.8089, mspe:1.8322, dtw:not calculated
+
+long_term_forecast_ElcPrice_96_96_Informer_ElcPrice_ftMS_sl96_ll48_pl96_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebtimeF_dtTrue_Exp_64_0  
+mse:23427.9375, mae:119.6005, rmse:153.0619, mape:0.7750, mspe:1.7871, dtw:not calculated
+
+long_term_forecast_ElcPrice_96_96_Informer_ElcPrice_ftMS_sl96_ll48_pl96_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebtimeF_dtTrue_Exp_128_0  
+mse:20816.8906, mae:119.6294, rmse:144.2806, mape:0.9790, mspe:2.8120, dtw:not calculated
+
+long_term_forecast_ElcPrice_96_96_Informer_ElcPrice_ftMS_sl96_ll48_pl96_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebtimeF_dtTrue_Exp_256_0  
+mse:20219.9785, mae:116.5057, rmse:142.1970, mape:0.9680, mspe:2.8065, dtw:not calculated
+
+long_term_forecast_ElcPrice_96_96_Informer_ElcPrice_ftMS_sl96_ll48_pl96_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebtimeF_dtTrue_Exp_512_0  
+mse:19841.4863, mae:116.2690, rmse:140.8598, mape:1.0267, mspe:3.1902, dtw:not calculated
+

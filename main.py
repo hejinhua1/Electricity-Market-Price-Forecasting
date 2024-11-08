@@ -17,7 +17,7 @@ class Config:
         self.task_name = 'long_term_forecast' # 'imputation', 'short_term_forecast', 'long_term_forecast', 'anomaly_detection', 'classification'
         self.is_training = 1
         self.model_id = 'ElcPrice_96_96'
-        self.model = 'TimesNet'   # 'Autoformer', 'Informer', 'Nonstationary_Transformer', 'TimesNet', 'TimeXer'
+        self.model = 'Informer'   # 'Autoformer', 'Informer', 'Nonstationary_Transformer', 'TimesNet', 'TimeXer'
         self.des = 'Exp'
 
         # 数据加载
