@@ -7,7 +7,7 @@ import os
 
 if __name__ == '__main__':
     # load data
-    best_file = '../results/long_term_forecast_ElcPrice_96_96_Informer_ElcPrice_ftMS_sl96_ll48_pl96_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebtimeF_dtTrue_Exp_8_0'
+    best_file = '../results/long_term_forecast_ElcPrice_96_96_Informer_ElcPrice_ftMS_sl96_ll48_pl96_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebtimeF_dtTrue_Exp_16_0'
     pred_path = os.path.join(best_file, 'pred.npy')
     true_path = os.path.join(best_file, 'true.npy')
     pred = np.load(pred_path)

@@ -66,5 +66,9 @@ For now, the best model is the Informer model, which achieves the lowest RMSE an
 long_term_forecast_ElcPrice_96_96_Informer_ElcPrice_ftMS_sl96_ll48_pl96_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebtimeF_dtTrue_Exp_16_0  
 mse:20175.2734, mae:110.7404, rmse:142.0397, mape:0.7177, mspe:1.4207, dtw:not calculated
 ```
+The results of the Informer model are shown below:
+![Informer Model Results](results/long_term_forecast_ElcPrice_96_96_Informer_ElcPrice_ftMS_sl96_ll48_pl96_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebtimeF_dtTrue_Exp_16_0/21days.png)
+
+
 
 
