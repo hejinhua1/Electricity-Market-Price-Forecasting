@@ -1,7 +1,7 @@
 from data_provider.data_factory import data_provider
 from exp.exp_basic import Exp_Basic
 from utils.tools import EarlyStopping, adjust_learning_rate, visual
-from utils.losses import mape_loss, mase_loss, smape_loss, WeightedMSELoss
+from utils.losses import mse_loss, mape_loss, mase_loss, smape_loss, WeightedMSELoss, DiffLoss
 from utils.metrics import metric
 import torch
 import torch.nn as nn
@@ -35,9 +35,9 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         model_optim = optim.Adam(self.model.parameters(), lr=self.args.learning_rate)
         return model_optim
 
-    def _select_criterion(self, loss_name='WMSE'):
+    def _select_criterion(self, loss_name='MAPE'):
         if loss_name == 'MSE':
-            return nn.MSELoss()
+            return mse_loss()
         elif loss_name == 'MAPE':
             return mape_loss()
         elif loss_name == 'MASE':
@@ -46,10 +46,13 @@ class Exp_Long_Term_Forecast(Exp_Basic):
             return smape_loss()
         elif loss_name == 'WMSE':
             return WeightedMSELoss()
+        elif loss_name == 'Diff':
+            return DiffLoss()
 
     def vali(self, vali_data, vali_loader, criterion):
         total_loss = []
         self.model.eval()
+        mse = nn.MSELoss()
         with torch.no_grad():
             for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in enumerate(vali_loader):
                 batch_x[:, :, :-1] = batch_y[:, -self.args.pred_len:, :-1]
@@ -75,7 +78,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                 pred = outputs.detach().cpu()
                 true = batch_y.detach().cpu()
 
-                loss = criterion(pred, true)
+                loss = mse(pred, true)
 
                 total_loss.append(loss)
         total_loss = np.average(total_loss)
@@ -97,7 +100,8 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         early_stopping = EarlyStopping(patience=self.args.patience, verbose=True)
 
         model_optim = self._select_optimizer()
-        criterion = self._select_criterion()
+        criterion = self._select_criterion(self.args.loss)
+        mse = nn.MSELoss()
 
         if self.args.use_amp:
             scaler = torch.cuda.amp.GradScaler()
@@ -129,7 +133,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                         f_dim = -1 if self.args.features == 'MS' else 0
                         outputs = outputs[:, -self.args.pred_len:, f_dim:]
                         batch_y = batch_y[:, -self.args.pred_len:, f_dim:].to(self.device)
-                        loss = criterion(outputs, batch_y)
+                        loss = criterion(0, 0, outputs, batch_y, torch.ones_like(batch_y))
                         train_loss.append(loss.item())
                 else:
                     outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
@@ -137,7 +141,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                     f_dim = -1 if self.args.features == 'MS' else 0
                     outputs = outputs[:, -self.args.pred_len:, f_dim:]
                     batch_y = batch_y[:, -self.args.pred_len:, f_dim:].to(self.device)
-                    loss = criterion(outputs, batch_y)
+                    loss = criterion(0, 0, outputs, batch_y, torch.ones_like(batch_y))
                     train_loss.append(loss.item())
 
                 if (i + 1) % 100 == 0:

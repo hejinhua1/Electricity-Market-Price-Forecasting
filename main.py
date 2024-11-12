@@ -77,7 +77,7 @@ class Config:
         self.patience = 3
         self.learning_rate = 0.0001
         self.des = 'test'
-        self.loss = 'MSE'
+        self.loss = 'MAPE'
         self.lradj = 'type1'
         self.use_amp = False
 

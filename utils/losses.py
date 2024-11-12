@@ -32,6 +32,22 @@ def divide_no_nan(a, b):
     return result
 
 
+class mse_loss(nn.Module):
+    def __init__(self):
+        super(mse_loss, self).__init__()
+
+    def forward(self, insample: t.Tensor, freq: int,
+                forecast: t.Tensor, target: t.Tensor, mask: t.Tensor) -> t.float:
+        """
+
+        :param forecast: Forecast values. Shape: batch, time
+        :param target: Target values. Shape: batch, time
+        :return: Loss value
+        """
+
+        return t.nn.MSELoss(forecast, target)
+
+
 class mape_loss(nn.Module):
     def __init__(self):
         super(mape_loss, self).__init__()
@@ -91,25 +107,55 @@ class mase_loss(nn.Module):
 
 
 class WeightedMSELoss(nn.Module):
-    def __init__(self, threshold=1.0, high_weight=2.0):
+    def __init__(self):
         super(WeightedMSELoss, self).__init__()
-        self.threshold = threshold
-        self.high_weight = high_weight
 
-    def forward(self, predictions, targets):
+
+    def forward(self, insample: t.Tensor, freq: int,
+                forecast: t.Tensor, target: t.Tensor, mask: t.Tensor) -> t.float:
         """
         WeightedMSELoss
 
-        :param threshold: threshold value
-        :param high_weight: weight for high values
         :param forecast: Forecast values. Shape: batch, time
         :param target: Target values. Shape: batch, time
         :return: Loss value
         """
-        mse = (predictions - targets) ** 2
-        # 找出真实值超过阈值的区域
-        weights = t.where(targets > self.threshold, self.high_weight, 1.0)
+        mse = (forecast - target) ** 2
+        # 权重
+        weights = t.abs(target)
         # 加权MSE
         weighted_mse = weights * mse
         return weighted_mse.mean()
 
+
+
+class DiffLoss(nn.Module):
+    def __init__(self, alpha=1.0, beta=0.5):
+        """
+        自定义差分惩罚损失函数，包含普通MSE损失、一阶差分MSE和二阶差分MSE。
+        :param alpha: 一阶差分损失项的权重
+        :param beta: 二阶差分损失项的权重
+        """
+        super(DiffLoss, self).__init__()
+        self.mse = nn.MSELoss()
+        self.alpha = alpha
+        self.beta = beta
+
+    def forward(self, insample: t.Tensor, freq: int,
+                forecast: t.Tensor, target: t.Tensor, mask: t.Tensor) -> t.float:
+        # 基础MSE损失
+        mse_loss = self.mse(forecast, target)
+
+        # 一阶差分损失
+        diff_preds = forecast[:, 1:] - forecast[:, :-1]
+        diff_targets = target[:, 1:] - target[:, :-1]
+        diff_loss = self.mse(diff_preds, diff_targets)
+
+        # 二阶差分损失
+        diff2_preds = diff_preds[:, 1:] - diff_preds[:, :-1]
+        diff2_targets = diff_targets[:, 1:] - diff_targets[:, :-1]
+        diff2_loss = self.mse(diff2_preds, diff2_targets)
+
+        # 总损失
+        total_loss = mse_loss + self.alpha * diff_loss + self.beta * diff2_loss
+        return total_loss
